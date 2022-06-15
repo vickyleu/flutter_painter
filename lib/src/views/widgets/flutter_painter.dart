@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import '../../controllers/drawables/path/hand_eraser_drawable.dart';
 import '../../controllers/events/selected_object_drawable_removed_event.dart';
 import '../../controllers/helpers/renderer_check/renderer_check.dart';
 import '../../controllers/drawables/drawable.dart';
@@ -17,16 +18,22 @@ import '../../controllers/events/events.dart';
 import '../../controllers/drawables/text_drawable.dart';
 import '../../controllers/drawables/path/path_drawables.dart';
 import '../../controllers/settings/settings.dart';
+import '../../controllers/events/multidrag_fix.dart' as multi;
 import '../painters/painter.dart';
 import '../../controllers/painter_controller.dart';
 import '../../controllers/helpers/border_box_shadow.dart';
 import '../../extensions/painter_controller_helper_extension.dart';
 import 'painter_controller_widget.dart';
 import 'dart:math' as math;
+import 'package:oktoast/oktoast.dart';
+
 
 part 'free_style_widget.dart';
+
 part 'text_widget.dart';
+
 part 'object_widget.dart';
+
 part 'shape_widget.dart';
 
 typedef DrawableCreatedCallback = Function(Drawable drawable);
@@ -62,14 +69,17 @@ class FlutterPainter extends StatelessWidget {
   /// UI around [_FlutterPainterWidget], which gets re-built automatically when necessary.
   final FlutterPainterBuilderCallback _builder;
 
+  final Size? originSize;
   /// Creates a [FlutterPainter] with the given [controller] and optional callbacks.
   const FlutterPainter(
       {Key? key,
-      required this.controller,
-      this.onDrawableCreated,
-      this.onDrawableDeleted,
-      this.onSelectedObjectDrawableChanged,
-      this.onPainterSettingsChanged})
+        required this.controller,
+        this.onDrawableCreated,
+        this.onDrawableDeleted,
+        this.onSelectedObjectDrawableChanged,
+        this.onPainterSettingsChanged,
+        this.originSize ///批注原始大小,缩放时将画笔数据等比例缩放
+      })
       : _builder = _defaultBuilder,
         super(key: key);
 
@@ -79,12 +89,14 @@ class FlutterPainter extends StatelessWidget {
   /// It is useful if you want to build UI that automatically rebuilds on updates from [controller].
   const FlutterPainter.builder(
       {Key? key,
-      required this.controller,
-      required FlutterPainterBuilderCallback builder,
-      this.onDrawableCreated,
-      this.onDrawableDeleted,
-      this.onSelectedObjectDrawableChanged,
-      this.onPainterSettingsChanged})
+        required this.controller,
+        required FlutterPainterBuilderCallback builder,
+        this.onDrawableCreated,
+        this.onDrawableDeleted,
+        this.onSelectedObjectDrawableChanged,
+        this.onPainterSettingsChanged,
+        this.originSize ///批注原始大小,缩放时将画笔数据等比例缩放
+      })
       : _builder = builder,
         super(key: key);
 
@@ -104,7 +116,8 @@ class FlutterPainter extends StatelessWidget {
                   onDrawableDeleted: onDrawableDeleted,
                   onPainterSettingsChanged: onPainterSettingsChanged,
                   onSelectedObjectDrawableChanged:
-                      onSelectedObjectDrawableChanged,
+                  onSelectedObjectDrawableChanged,
+                  originSize:originSize
                 ));
           }),
     );
@@ -132,58 +145,71 @@ class _FlutterPainterWidget extends StatelessWidget {
 
   /// Callback when the [PainterSettings] of [PainterController] are updated internally.
   final ValueChanged<PainterSettings>? onPainterSettingsChanged;
+  final Size? originSize;
 
   /// Creates a [_FlutterPainterWidget] with the given [controller] and optional callbacks.
   const _FlutterPainterWidget(
       {Key? key,
-      required this.controller,
-      this.onDrawableCreated,
-      this.onDrawableDeleted,
-      this.onSelectedObjectDrawableChanged,
-      this.onPainterSettingsChanged})
+        required this.controller,
+        this.onDrawableCreated,
+        this.onDrawableDeleted,
+        this.onSelectedObjectDrawableChanged,
+        this.onPainterSettingsChanged,
+        this.originSize,
+      })
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+
     return Navigator(
         onGenerateRoute: (settings) => PageRouteBuilder(
             settings: settings,
             opaque: false,
             pageBuilder: (context, animation, secondaryAnimation) {
               final controller = PainterController.of(context);
-              return NotificationListener<FlutterPainterNotification>(
-                onNotification: onNotification,
-                child: InteractiveViewer(
-                  transformationController: controller.transformationController,
-                  minScale: controller.settings.scale.enabled
-                      ? controller.settings.scale.minScale
-                      : 1,
-                  maxScale: controller.settings.scale.enabled
-                      ? controller.settings.scale.maxScale
-                      : 1,
-                  panEnabled: controller.settings.scale.enabled &&
-                      (controller.freeStyleSettings.mode == FreeStyleMode.none),
-                  scaleEnabled: controller.settings.scale.enabled,
-                  child: _FreeStyleWidget(
-                      // controller: controller,
-                      child: _TextWidget(
-                    // controller: controller,
-                    child: _ShapeWidget(
-                      // controller: controller,
-                      child: _ObjectWidget(
+              return LayoutBuilder(builder: (context,cc){
+                return SizedBox(
+                  width: cc.maxWidth,
+                  height: cc.maxHeight,
+                  child: NotificationListener<FlutterPainterNotification>(
+                    onNotification: onNotification,
+                    child: InteractiveViewer(
+                      transformationController: controller.transformationController,
+                      minScale: controller.settings.scale.enabled
+                          ? controller.settings.scale.minScale
+                          : 1,
+                      maxScale: controller.settings.scale.enabled
+                          ? controller.settings.scale.maxScale
+                          : 1,
+                      panEnabled: controller.settings.scale.enabled &&
+                          (controller.freeStyleSettings.mode == FreeStyleMode.none),
+                      scaleEnabled: controller.settings.scale.enabled,
+                      child: _FreeStyleWidget(
                         // controller: controller,
-                        interactionEnabled: true,
-                        child: CustomPaint(
-                          painter: Painter(
-                            drawables: controller.value.drawables,
-                            background: controller.value.background,
-                          ),
-                        ),
-                      ),
+                          scale: originSize,
+                          child: _TextWidget(
+                            key: ObjectKey(controller),
+                            // controller: controller,
+                            child: _ShapeWidget(
+                              // controller: controller,
+                              child: _ObjectWidget(
+                                // controller: controller,
+                                interactionEnabled: true,
+                                child: CustomPaint(
+                                  painter: Painter(
+                                    drawables: controller.value.drawables,
+                                    background: controller.value.background,
+                                    scale: originSize
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )),
                     ),
-                  )),
-                ),
-              );
+                  ),
+                );
+              });
             }));
   }
 

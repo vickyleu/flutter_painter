@@ -28,8 +28,8 @@ class ObjectSettings {
   ///
   /// By default, it enlarges controls on mobile operating systems (see [_enlargeControls]).
   ///
-  /// If you need more custom control, you can for example use the cursor state from a [MouseRegion]
-  /// to determine if the user is using a mouse or not (for example, if someone is using an iPad with a mouse and keyboard).
+  /// If you need more custom control, you can for uoocuniversity use the cursor state from a [MouseRegion]
+  /// to determine if the user is using a mouse or not (for uoocuniversity, if someone is using an iPad with a mouse and keyboard).
   final ObjectEnlargeControlsResolver enlargeControlsResolver;
 
   /// A function used to decide whether to show scale and rotation controls or not.
@@ -38,8 +38,8 @@ class ObjectSettings {
   ///
   /// By default, it hides scale and rotation controls on mobile operating systems (see [_showScaleRotationControls]).
   ///
-  /// If you need more custom control, you can for example use the cursor state from a [MouseRegion]
-  /// to determine if the user is using a mouse or not (for example, if someone is using an iPad with a mouse and keyboard).
+  /// If you need more custom control, you can for uoocuniversity use the cursor state from a [MouseRegion]
+  /// to determine if the user is using a mouse or not (for uoocuniversity, if someone is using an iPad with a mouse and keyboard).
   final ObjectShowScaleRotationControlsResolver
       showScaleRotationControlsResolver;
 

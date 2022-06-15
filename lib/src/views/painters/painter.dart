@@ -16,6 +16,7 @@ class Painter extends CustomPainter {
   /// If it is null, the drawables will be drawn without scaling.
   final Size? scale;
 
+
   /// Creates a [Painter] that paints the [drawables] onto a background [background].
   const Painter({
     required this.drawables,
@@ -29,6 +30,7 @@ class Painter extends CustomPainter {
     // This is to allow [_scale] to be upgraded to non-nullable after checking for null
     final _scale = scale;
 
+    canvas.drawColor(Colors.transparent, BlendMode.dst);
     // Draw the background if it was provided
     if (background != null && background!.isNotHidden) {
       background!.draw(canvas, size);
@@ -63,9 +65,8 @@ class Painter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     // Unnecessary check to enforce the [Painter] type
     if (oldDelegate is! Painter) return true;
-
     // If the background changed, or any of the drawables changed, a repaint is needed
-    return oldDelegate.background != background ||
-        !const ListEquality().equals(oldDelegate.drawables, drawables);
+    return (oldDelegate.scale!=scale)||(oldDelegate.background != background ||
+        !const ListEquality().equals(oldDelegate.drawables, drawables));
   }
 }

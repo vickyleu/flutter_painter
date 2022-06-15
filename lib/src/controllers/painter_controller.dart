@@ -1,9 +1,15 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
-
+import 'package:flutter_painter/flutter_painter_extensions.dart';
+import 'package:image/image.dart' as Img;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_painter/flutter_painter_pure.dart';
+import 'drawables/path/hand_eraser_drawable.dart';
 import 'events/selected_object_drawable_removed_event.dart';
 import '../views/widgets/painter_controller_widget.dart';
 import 'actions/actions.dart';
@@ -25,6 +31,9 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
   ///
   /// This will dispatch events that represent actions, such as adding a new text drawable.
   final StreamController<PainterEvent> _eventsSteamController;
+  ValueNotifier<FreeStyleMode> freeStyleNotifier =ValueNotifier(FreeStyleMode.draw);
+
+
 
   /// This key will be used by the [FlutterPainter] widget assigned this controller.
   ///
@@ -71,7 +80,7 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
   /// The stream of [PainterEvent]s dispatched from this controller.
   ///
   /// This stream is for children widgets of [FlutterPainter] to listen to external events.
-  /// For example, adding a new text drawable.
+  /// For uoocuniversity, adding a new text drawable.
   Stream<PainterEvent> get events => _eventsSteamController.stream;
 
   /// Setting this will notify all the listeners of this [PainterController]
@@ -90,6 +99,13 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
   /// This is used internally in the library to fetch the controller at different widgets.
   static PainterController of(BuildContext context) {
     return PainterControllerWidget.of(context).controller;
+  }
+  static PainterController? maybeOf(BuildContext context) {
+    try{
+      return PainterControllerWidget.of(context).controller;
+    }catch(e){
+      return null;
+    }
   }
 
   /// Add the [drawables] to the controller value drawables.
@@ -201,6 +217,10 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
     _addAction(action, newAction);
   }
 
+
+
+
+
   /// Groups all drawables in the controller into one drawable.
   ///
   /// This is used when an erase drawable is added, to prevent modifications to previous drawables.
@@ -219,6 +239,8 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
     performedActions.add(action);
     if (!newAction) _mergeAction();
     unperformedActions.clear();
+    canRedoNotifier.value=false;
+    canUndoNotifier.value=true;
   }
 
   /// Whether an [undo] operation can be performed or not.
@@ -226,6 +248,10 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
 
   /// Whether a [redo] operation can be performed or not.
   bool get canRedo => unperformedActions.isNotEmpty;
+
+
+  ValueNotifier<bool>canRedoNotifier=ValueNotifier(false);
+  ValueNotifier<bool>canUndoNotifier=ValueNotifier(false);
 
   /// Undoes the last action performed on drawables. The action can later be [redo]ne.
   ///
@@ -240,6 +266,8 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
     final action = performedActions.removeLast();
     action.unperform(this);
     unperformedActions.add(action);
+    canRedoNotifier.value=true;
+    canUndoNotifier.value=canUndo;
   }
 
   /// Redoes the last [undo]ne action. The redo operation can be [undo]ne.
@@ -255,6 +283,8 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
     final action = unperformedActions.removeLast();
     action.perform(this);
     performedActions.add(action);
+    canRedoNotifier.value=canRedo;
+    canUndoNotifier.value=true;
   }
 
   /// Merges a newly added action with the previous action.
@@ -265,6 +295,7 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
     final groupedAction = second.merge(first);
 
     if (groupedAction != null) performedActions.add(groupedAction);
+    canUndoNotifier.value=canUndo;
   }
 
   /// Dispatches a [AddTextPainterEvent] on `events` stream.
@@ -277,13 +308,13 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
   /// If [size] is provided, the drawable will scaled to fit that size.
   /// If not, it will take the original image's size.
   ///
-  /// Note that if the painter is not rendered yet (for example, this method was used in the initState method),
+  /// Note that if the painter is not rendered yet (for uoocuniversity, this method was used in the initState method),
   /// the drawable position will be [Offset.zero].
   /// If you face this issue, call this method in a post-frame callback.
   /// ```dart
   /// void initState(){
   ///   super.initState();
-  ///   WidgetsBinding.instance?.addPostFrameCallback((timestamp){
+  ///   WidgetsBinding.instance.addPostFrameCallback((timestamp){
   ///     controller.addImage(myImage);
   ///   });
   /// }
@@ -315,18 +346,39 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
   ///
   /// The size of the output image is controlled by [size].
   /// All drawables will be scaled according to that image size.
-  Future<ui.Image> renderImage(Size size) async {
+  Future<ui.Image> renderImage(Size originSize,{Size? zoomSize}) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     final painter = Painter(
       drawables: value.drawables,
-      scale: painterKey.currentContext?.size ?? size,
+      scale:  (painterKey.currentContext?.size ?? originSize),
       background: value.background,
     );
-    painter.paint(canvas, size);
-    return await recorder
-        .endRecording()
-        .toImage(size.width.floor(), size.height.floor());
+    painter.paint(canvas, originSize);
+    final picture =  recorder
+        .endRecording();
+    var image = await picture.toImage(originSize.width.floor(), originSize.height.floor());
+    // final valuev = await image.pngBytes;
+    // if(valuev!=null){
+    //   final b64Str = base64Encode(valuev);
+    //   print("b64Str==>$b64Str");
+    // }
+
+    if(zoomSize!=null && image!=null){
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List? uInt8list = byteData?.buffer.asUint8List();
+      Img.Image? finalImage = Img.decodePng(uInt8list!);
+      if(finalImage!=null){
+        final img = Img.encodePng(Img.copyResize(finalImage,width:zoomSize.width.toInt(),height: zoomSize.height.toInt() ));
+        final Completer<ui.Image> completer = Completer();
+        ui.decodeImageFromList(Uint8List.fromList(img), (ui.Image img) {
+          return completer.complete(img);
+        });
+        image = await completer.future;
+      }
+    }
+    // final image = await picture.toImage(zoomSize?.width.floor() ?? originSize.width.floor(), zoomSize?.height.floor() ?? originSize.height.floor());
+    return image;
   }
 
   /// The currently selected object drawable.

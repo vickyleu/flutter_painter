@@ -39,7 +39,7 @@ abstract class ObjectDrawable extends Drawable {
   /// The current assist lines the object has.
   ///
   /// These are lines drawn behind the object when it is in special positions
-  /// (for example: horizontal center, vertical center, right angle).
+  /// (for uoocuniversity: horizontal center, vertical center, right angle).
   final Set<ObjectDrawableAssist> assists;
 
   /// The paint to be used for each assist type.

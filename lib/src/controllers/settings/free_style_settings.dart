@@ -11,22 +11,25 @@ class FreeStyleSettings {
 
   /// The stroke width the path will be drawn with.
   final double strokeWidth;
+  final double eraseWidth;
 
   /// Creates a [FreeStyleSettings] with the given [color]
   /// and [strokeWidth] and [mode] values.
   const FreeStyleSettings({
     this.mode = FreeStyleMode.none,
     this.color = Colors.black,
-    this.strokeWidth = 1,
+    this.strokeWidth = 15,
+    this.eraseWidth = 45,
   });
 
   /// Creates a copy of this but with the given fields replaced with the new values.
   FreeStyleSettings copyWith(
-      {FreeStyleMode? mode, Color? color, double? strokeWidth}) {
+      {FreeStyleMode? mode, Color? color, double? strokeWidth,double? eraseWidth}) {
     return FreeStyleSettings(
       mode: mode ?? this.mode,
       color: color ?? this.color,
       strokeWidth: strokeWidth ?? this.strokeWidth,
+      eraseWidth: eraseWidth ?? this.eraseWidth,
     );
   }
 }

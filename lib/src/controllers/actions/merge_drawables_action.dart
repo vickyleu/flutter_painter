@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_painter/flutter_painter.dart';
 
 import '../drawables/grouped_drawable.dart';
 
@@ -25,9 +26,21 @@ class MergeDrawablesAction extends ControllerAction<void, void> {
     final value = controller.value;
 
     final currentDrawables = List<Drawable>.from(value.drawables);
-    final groupedDrawable = GroupedDrawable(drawables: currentDrawables);
+
+    final shouldMergeDrawables = <Drawable>[];
+    final ignoreDrawables = <Drawable>[];
+    for (var element in currentDrawables) {
+      if(element is TextDrawable){
+        // element.
+        ignoreDrawables.add(element);
+      }else{
+        shouldMergeDrawables.add(element);
+      }
+    }
+
+    final groupedDrawable = GroupedDrawable(drawables: shouldMergeDrawables);
     controller.value = value.copyWith(
-      drawables: [groupedDrawable],
+      drawables: [...ignoreDrawables,groupedDrawable],
     );
     controller.deselectObjectDrawable(isRemoved: true);
   }

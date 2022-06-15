@@ -104,7 +104,7 @@ class _ObjectWidgetState extends State<_ObjectWidget> {
     super.initState();
 
     // Listen to the stream of events from the paint controller
-    WidgetsBinding.instance?.addPostFrameCallback((timestamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timestamp) {
       controllerEventSubscription =
           PainterController.of(context).events.listen((event) {
         // When an [RemoveDrawableEvent] event is received and removed drawable is the selected object
@@ -174,7 +174,7 @@ class _ObjectWidgetState extends State<_ObjectWidget> {
                               : SystemMouseCursors.allScroll,
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
-                            onTap: () => tapDrawable(drawable),
+                            onTap: () => tapDrawable(drawable),//TODO 点击drawable控件
                             onScaleStart: (details) =>
                                 onDrawableScaleStart(entry, details),
                             onScaleUpdate: (details) =>
@@ -218,7 +218,7 @@ class _ObjectWidgetState extends State<_ObjectWidget> {
                                               return Container(
                                                 decoration: BoxDecoration(
                                                     border: Border.all(
-                                                        color: Colors.white,
+                                                        color: Colors.white,//TODO 文本框修饰器
                                                         width:
                                                             selectedBorderWidth),
                                                     boxShadow: [
@@ -568,8 +568,7 @@ class _ObjectWidgetState extends State<_ObjectWidget> {
   ///
   /// Dispatches an [ObjectDrawableNotification] that the object was tapped.
   void tapDrawable(ObjectDrawable drawable) {
-    if (drawable.locked) return;
-
+    if (drawable.locked) return;//TODO 锁定的drawable对象不允许再被选中
     if (controller?.selectedObjectDrawable == drawable) {
       ObjectDrawableReselectedNotification(drawable).dispatch(context);
     } else {

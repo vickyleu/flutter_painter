@@ -36,7 +36,7 @@ class ImageDrawable extends ObjectDrawable {
   /// Creates an [ImageDrawable] with the given [image], and calculates the scale based on the given [size].
   /// The scale will be calculated such that the size of the drawable fits into the provided size.
   ///
-  /// For example, if the image was 512x256 and the provided size was 128x128, the scale would be 0.25,
+  /// For uoocuniversity, if the image was 512x256 and the provided size was 128x128, the scale would be 0.25,
   /// fitting the width of the image into the size (128x64).
   ImageDrawable.fittedToSize({
     required Offset position,

@@ -135,6 +135,7 @@ extension PainterControllerHelper on PainterController {
 
   /// The stroke width used for free-style drawing from `value.settings.freeStyle` directly.
   double get freeStyleStrokeWidth => value.settings.freeStyle.strokeWidth;
+  double get freeStyleEraseWidth => value.settings.freeStyle.eraseWidth;
 
   /// The color used for free-style drawing from `value.settings.freeStyle` directly.
   Color get freeStyleColor => value.settings.freeStyle.color;
@@ -225,11 +226,15 @@ extension PainterControllerHelper on PainterController {
   /// that they need to update (it calls [notifyListeners]). For this reason,
   /// this value should only be set between frames, e.g. in response to user
   /// actions, not during the build, layout, or paint phases.
-  set freeStyleMode(FreeStyleMode mode) => value = value.copyWith(
-          settings: value.settings.copyWith(
-              freeStyle: value.settings.freeStyle.copyWith(
-        mode: mode,
-      )));
+  set freeStyleMode(FreeStyleMode mode) {
+    value = value.copyWith(
+        settings: value.settings.copyWith(
+            freeStyle: value.settings.freeStyle.copyWith(
+              mode: mode,
+            )));
+    freeStyleNotifier.value=mode;
+  }
+
 
   /// The stroke width used for free-style drawing from `value.settings.freeStyle` directly.
   ///
@@ -241,6 +246,11 @@ extension PainterControllerHelper on PainterController {
           settings: value.settings.copyWith(
               freeStyle: value.settings.freeStyle.copyWith(
         strokeWidth: strokeWidth,
+      )));
+  set freeStyleEraseWidth(double eraseWidth) => value = value.copyWith(
+          settings: value.settings.copyWith(
+              freeStyle: value.settings.freeStyle.copyWith(
+        eraseWidth: eraseWidth,
       )));
 
   /// The color used for free-style drawing from `value.settings.freeStyle` directly.
