@@ -39,6 +39,9 @@ class _FreeStyleWidgetState extends State<_FreeStyleWidget> {
   void onHandEraserCalling(HandEraserEvent event) {
     final controller = PainterController.maybeOf(context);
     if (controller == null) return;
+    if(controller.isCovered()){
+      return;
+    }
     final currentSize =
         (freeStyleParentKey.currentContext?.findRenderObject() as RenderBox?)
             ?.size;

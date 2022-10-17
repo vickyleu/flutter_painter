@@ -420,6 +420,12 @@ class PainterController extends ValueNotifier<PainterControllerValue> {
     }
     selectObjectDrawable(null);
   }
+
+  ValueNotifier<bool>isCoveredNotifier=ValueNotifier(false);
+
+  bool isCovered() {
+    return isCoveredNotifier.value;
+  }
 }
 
 /// The current paint mode, drawables and background values of a [FlutterPainter] widget.
