@@ -6,9 +6,12 @@ class GlobalConfig{
 
   GlobalConfig._();
 
-  static GlobalConfig of(BuildContext context) {
-    final result = GlobalConfigWidget.of(context);
-    return result.config;
+  static GlobalConfig? of(BuildContext context) {
+    try{
+      final result = GlobalConfigWidget.of(context);
+      return result.config;
+    }catch(e){
+    }
   }
 
 }

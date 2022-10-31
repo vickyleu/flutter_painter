@@ -32,7 +32,7 @@ class _FreeStyleWidgetState extends State<_FreeStyleWidget> {
   void initState() {
     super.initState();
     subscription = eventBus.on<HandEraserEvent>().listen((event) {
-      if(!GlobalConfig.of(context).isOverlayShowing){
+      if(!(GlobalConfig.of(context)?.isOverlayShowing??false)){
         onHandEraserCalling(event);
       }
     });
